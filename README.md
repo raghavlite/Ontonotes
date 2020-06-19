@@ -5,9 +5,11 @@ python parth_wise_analysis.py train.english.128_words.jsonlines
 
 
 Input : train.english.128_words.jsonlines
+
 Output : Analysis_FT_Ontonotes_{0.7,0.8,0.9}.json
 
 Download Input from https://drive.google.com/drive/folders/1MTTeVf-4ICZDbJBAsvBo7DXIESozAz3m?usp=sharing
+
 Above link also has the output available.
 
 Here Analysis_FT_Ontonotes_{0.7,0.8,0.9}.json are the three analysis json files with docids as keys and different statistics as values. We can find the merged clusters for a specific document by
