@@ -92,7 +92,7 @@ def analysis(part_id, part_clusters, stats_dict):
     #             import ipdb; ipdb.set_trace()
 
     if(conllId not in stats_dict):
-        stats_dict[conllId] = {"clusters":[], "cluster_count":0, "commonnoun_cluster_count":0, "propernoun_cluster_count":0, \
+        stats_dict[conllId] = {"clusters":[], "cluster_text":[], "cluster_count":0, "commonnoun_cluster_count":0, "propernoun_cluster_count":0, \
             "matching_clusters":0, "doc_count":1, "token_count":len(token_list), "first_part_clusters":len(cluster_list)}
         first_part = True
     else:
@@ -251,7 +251,7 @@ def cluster_matching_analysis():
     # for matching_threshold in np.linspace(0.7,0.95,6):
     global matching_threshold
     thres_wise_percent_list = []
-    for matching_threshold in [0.9, 0.95]:
+    for matching_threshold in [0.7, 0.8, 0.9]:
         doc_list = []
         stats_dict = {}
         breaker = 0;
@@ -262,6 +262,7 @@ def cluster_matching_analysis():
                 
                 # doc_list.append(docid(data["doc_key"])[0])
                 # do stuff
+                # import ipdb; ipdb.set_trace()
                 analysis(data["doc_key"], data, stats_dict)
         # print(stats_dict, "\n\n\n\n\n")
 
@@ -281,7 +282,7 @@ def cluster_matching_analysis():
         thres_wise_percent_list.append(np.mean(res0))
         print(np.mean(res0))
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         print(thres_wise_percent_list)
         # for each in stats_dict:
         with open("./Analysis_FT_Ontonotes_{}.json".format(matching_threshold), "w") as f:
