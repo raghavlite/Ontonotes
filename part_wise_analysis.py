@@ -178,74 +178,6 @@ def doc_size_analysis():
 
 
 
-
-def doc_len_analysis():
-    # in_fn = sys.argv[1]
-    # doc_list = []
-    # stats_dict = {}
-    # breaker = 0;
-    # with open(in_fn, 'r') as f:
-    #     for line in f:
-    #         # print(line)
-    #         # if(breaker>9):
-    #         #     break
-    #         # breaker+=1
-
-    #         data = json.loads(line)
-    #         # import ipdb; ipdb.set_trace()
-
-    #         # doc_list.append(docid(data["doc_key"])[0])
-    #         # do stuff
-    #         analysis(data["doc_key"], data, stats_dict)
-
-    # print("done finding files", breaker)
-    # # print(stats_dict)
-    # # print(stats_dict[""])
-    # # print(len(stats_dict))
-    # # import ipdb; ipdb.set_trace()
-    with open("./Analysis_Ontonotes.json", "w") as f:
-        json.dump(stats_dict, f)
-
-    with open("./Analysis_Ontonotes.json", "r") as f:
-        stats_dict = json.load(f)
-
-    print("Total Number of Documents", len(stats_dict))
-
-    doc_len_list = []
-    for each_doc in stats_dict:
-        # print(stats_dict[each_doc]["token_count"])
-        doc_len_list.append(stats_dict[each_doc]["token_count"])
-
-    print("Mean Size of Documents", np.mean(doc_len_list))
-    print("Standard Deviation of Documents' size", np.std(doc_len_list))
-
-
-    hist = np.histogram(doc_len_list, bins=np.arange(70)*500)
-    # plt.hist(hist[0], density=True, bins=hist[1])
-    # import ipdb; ipdb.set_trace()
-    print(hist)
-
-
-
-
-    with open("./Analysis_Ontonotes.json", "r") as f:
-        stats_dict = json.load(f)
-
-
-    doc_len_list = []
-    for each_doc in stats_dict:
-        # print(stats_dict[each_doc]["token_count"])
-        doc_len_list.append(stats_dict[each_doc]["doc_count"])
-
-    hist = np.histogram(doc_len_list, bins=np.arange(40))
-    # plt.hist(hist[0], density=True, bins=hist[1])
-    # import ipdb; ipdb.set_trace()
-    print(hist)
-
-
-
-
-
 def cluster_matching_analysis():
     in_fn = sys.argv[1]
     # for matching_threshold in np.linspace(0.7,0.95,6):
@@ -367,5 +299,4 @@ def cluster_matching_analysis():
 
 if __name__ == "__main__":
     cluster_matching_analysis()
-    # doc_len_analysis()
     # doc_size_analysis()
