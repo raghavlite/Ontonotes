@@ -6,7 +6,7 @@ python parth_wise_analysis.py train.english.128_words.jsonlines
 
 Input : train.english.128_words.jsonlines
 
-Output : Analysis_FT_Ontonotes_{0.7,0.8,0.9}.json
+Output : Analysis_FT_Ontonotes_{0.7,0.8,0.9}.json corresponding to string matching thresholds of 0.7, 0.8, 0.9 respectively
 
 Download Input from https://drive.google.com/drive/folders/1MTTeVf-4ICZDbJBAsvBo7DXIESozAz3m?usp=sharing
 
