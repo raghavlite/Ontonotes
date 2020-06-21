@@ -2,7 +2,7 @@
 Part Analysis
 
 ```
-python parth_wise_analysis.py train.english.128_words.jsonlines
+python parth_wise_analysis.py train.english.128_uniq.jsonlines
 ```
 
 **Input** : train.english.128_words.jsonlines
