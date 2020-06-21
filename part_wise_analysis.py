@@ -11,8 +11,8 @@ import tqdm
 
 def cluster_match(cluster1, cluster2, pcontext):
     # here we implement tokenwise match
-    for c1_word in cluster1:
-        for c2_word in cluster2:
+    for part1, c1_word in cluster1:
+        for part2, c2_word in cluster2:
             c1_text = list(zip(*c1_word))[0]
             c2_text = list(zip(*c2_word))[0]
 
@@ -75,12 +75,15 @@ def isPNoun(tagged_list):
     return False
 
 
-def analysis(part_id, part_clusters, stats_dict):
+def analysis(con_part_id, part_clusters, stats_dict):
     # print(part_id, flush=True)
     # return
     # import ipdb; ipdb.set_trace()
+
+
+
     first_part = False
-    conllId , partid = docid(part_id)
+    conllId , partid = docid(con_part_id)
     # print(conllId, partid)
     token_list = list(itertools.chain.from_iterable(part_clusters["sentences"]))
     cluster_list = part_clusters["clusters"] # list of list of [start, end] of mentions
@@ -92,12 +95,19 @@ def analysis(part_id, part_clusters, stats_dict):
     #             import ipdb; ipdb.set_trace()
 
     if(conllId not in stats_dict):
-        stats_dict[conllId] = {"clusters":[], "cluster_text":[], "cluster_count":0, "commonnoun_cluster_count":0, "propernoun_cluster_count":0, \
+        stats_dict[conllId] = {"clusters":[], "parts":[], "cluster_text":[], "cluster_count":0, "commonnoun_cluster_count":0, "propernoun_cluster_count":0, \
             "matching_clusters":0, "doc_count":1, "token_count":len(token_list), "first_part_clusters":len(cluster_list)}
         first_part = True
     else:
-        stats_dict[conllId]["doc_count"]+=1
-        stats_dict[conllId]["token_count"]+=len(token_list)
+        if(con_part_id not in stats_dict[conllId]["parts"]):
+            stats_dict[conllId]["doc_count"]+=1
+            stats_dict[conllId]["token_count"]+=len(token_list)
+        else:
+            return
+
+
+
+    stats_dict[conllId]["parts"].append(con_part_id)
 
     cluster_text_list = []
     for each_cluster in cluster_list:
@@ -106,7 +116,7 @@ def analysis(part_id, part_clusters, stats_dict):
             men_tokens = token_list[men[0]:men[1]+1]
             men_tagged_tokens = nltk.pos_tag(men_tokens)
             if(isPNoun(men_tagged_tokens)):
-                cluster_text.append(men_tagged_tokens)
+                cluster_text.append(("part_{}".format(partid), men_tagged_tokens))
         cluster_text_list.append(cluster_text)
 
 
@@ -148,7 +158,7 @@ def docid(file_name):
 
 
 
-def doc_size_analysis():
+def doc_len_analysis():
     in_fn = sys.argv[1]
     doc_len = []
     stats_dict = {}
@@ -171,14 +181,67 @@ def doc_size_analysis():
         print("Total size of documents", len(doc_len))
         print("Mean len of documents", np.mean(doc_len))
         print("Std of documents", np.std(doc_len))
+        
+        print("Max size", np.max(doc_len))
+
 
         hist = np.histogram(doc_len, bins=np.arange(20)*500)
         print(hist)
 
+    with open("./Analysis_FT_Ontonotes_0.7.json", "r") as f:
+        stats_dict = json.load(f)
+
+    print("Total Number of Documents", len(stats_dict))
+
+    doc_len_list = []
+    for each_doc in stats_dict:
+        # print(stats_dict[each_doc]["token_count"])
+        doc_len_list.append(stats_dict[each_doc]["token_count"])
+
+    print("Mean Size of Documents", np.mean(doc_len_list))
+    print("Standard Deviation of Documents' size", np.std(doc_len_list))
+    print("Max Document' size", np.max(doc_len_list))
+
+
+    hist = np.histogram(doc_len_list, bins=np.arange(20)*500)
+    # plt.hist(hist[0], density=True, bins=hist[1])
+    # import ipdb; ipdb.set_trace()
+    print(hist)
 
 
 
-def cluster_matching_analysis():
+
+
+def doc_parts_analysis():
+    "raghav"
+    with open("./Analysis_FT_Ontonotes_0.7.json", "r") as f:
+        stats_dict = json.load(f)
+
+    num_parts_list = []
+    for each_doc in stats_dict:
+        # print(stats_dict[each_doc]["token_count"])
+        num_parts_list.append(stats_dict[each_doc]["doc_count"])
+    
+
+    print("Mean Size of Documents", np.mean(num_parts_list))
+    print("Standard Deviation of Documents' size", np.std(num_parts_list))
+
+
+    hist = np.histogram(num_parts_list, bins=np.arange(30))
+
+    print(hist)
+
+
+
+
+
+
+
+
+
+
+
+def cluster_matching():
     in_fn = sys.argv[1]
     # for matching_threshold in np.linspace(0.7,0.95,6):
     global matching_threshold
@@ -190,13 +253,8 @@ def cluster_matching_analysis():
         with open(in_fn, 'r') as f:
             for line in tqdm.tqdm(f):
                 data = json.loads(line)
-                # import ipdb; ipdb.set_trace()
-                
-                # doc_list.append(docid(data["doc_key"])[0])
-                # do stuff
-                # import ipdb; ipdb.set_trace()
                 analysis(data["doc_key"], data, stats_dict)
-        # print(stats_dict, "\n\n\n\n\n")
+
 
         zero_count=0
         doc_percent_list = []
@@ -206,7 +264,7 @@ def cluster_matching_analysis():
                 doc_percent_list.append((stats_dict[each_doc]["matching_clusters"]*1.0/(stats_dict[each_doc]["cluster_count"]-stats_dict[each_doc]["first_part_clusters"]), each_doc))
 
             else:
-                print(stats_dict[each_doc], "\n\n\n\n\n")
+                # print(stats_dict[each_doc], "\n\n\n\n\n")
                 zero_count+=1
         # import ipdb; ipdb.set_trace()
         res0 = list(zip(*doc_percent_list))[0]
@@ -224,71 +282,64 @@ def cluster_matching_analysis():
 
 
 
-    # mean_matching = []
-    # for matching_threshold in np.linspace(1,0.5,11):
-    #     zero_count = 0
-    #     doc_percent_list = []
-    #     with open("./Analysis_FT_Ontonotes_{}.json".format(matching_threshold), "r") as f:
-    #         stats_dict = json.load(f)
-    #     for each_doc in stats_dict:
-    #         if(stats_dict[each_doc]["cluster_count"]>0 and stats_dict[each_doc]["doc_count"] >1):
-    #             doc_percent_list.append(stats_dict[each_doc]["matching_clusters"]*1.0/stats_dict[each_doc]["cluster_count"])
-    #         else:
-    #             print(stats_dict[each_doc], "\n\n\n\n\n")
-    #             doc_percent_list.append(0)
-    #             zero_count+=1
-    #     # import ipdb; ipdb.set_trace()
-    #     print(zero_count)
+def cluster_matching_analysis():
+    mean_matching = []
+    mean_matching_micro = []
+    for matching_threshold in [0.7, 0.8, 0.9]:
+        zero_count = 0
+        doc_percent_list = []
+        doc_matching_list = []
+        doc_clusters_list = []
+        with open("./Analysis_FT_Ontonotes_{}.json".format(matching_threshold), "r") as f:
+            stats_dict = json.load(f)
+        for each_doc in stats_dict:
+            if(stats_dict[each_doc]["cluster_count"]>0 and stats_dict[each_doc]["doc_count"] >1):
+                doc_percent_list.append(stats_dict[each_doc]["matching_clusters"]*1.0/(stats_dict[each_doc]["cluster_count"]-stats_dict[each_doc]["first_part_clusters"]))
+                doc_matching_list.append(stats_dict[each_doc]["matching_clusters"]*1.0)
+                doc_clusters_list.append((stats_dict[each_doc]["cluster_count"]-stats_dict[each_doc]["first_part_clusters"]))
+            else:
+                # print(stats_dict[each_doc], "\n\n\n\n\n")
+                # doc_percent_list.append(0)
+                zero_count+=1
+        # import ipdb; ipdb.set_trace()
+        print(zero_count)
 
-    #     # print(doc_percent_list)
-    #     mean_matching.append(np.mean(doc_percent_list))
-
-    # print(mean_matching)
-
-
-    # mean_matching = []
-    # for matching_threshold in np.linspace(1,0.5,11):
-    #     match_list = []
-    #     clus_list = []
-    #     zero_count = 0
-    #     with open("./Analysis_FT_Ontonotes_{}.json".format(matching_threshold), "r") as f:
-    #         stats_dict = json.load(f)
-
-    #     for each_doc in stats_dict:
-    #         if(stats_dict[each_doc]["cluster_count"]>0 and stats_dict[each_doc]["doc_count"] >1):
-    #             match_list.append(stats_dict[each_doc]["matching_clusters"])
-    #             clus_list.append(stats_dict[each_doc]["propernoun_cluster_count"])
-    #         else:
-    #             print(stats_dict[each_doc], "\n\n\n\n\n")
-    #             zero_count+=1
-    #     # import ipdb; ipdb.set_trace()
-    #     print(zero_count)
-
-    #     print(np.sum(match_list)*1.0/np.sum(clus_list))
-    #     mean_matching.append(np.sum(match_list)*1.0/(np.sum(clus_list)+zero_count))
-    
-    # print(mean_matching)
-
-    # mean_matching = []
-    # propnoun_list = []
-    # commonnou_list = []
-    # clus_list = []
-    # zero_count = 0
-    # with open("./Analysis_FT_Ontonotes_{}.json".format(1.0), "r") as f:
-    #     stats_dict = json.load(f)
-
-    # for each_doc in stats_dict:
-    #     propnoun_list.append(stats_dict[each_doc]["propernoun_cluster_count"])
-    #     commonnou_list.append(stats_dict[each_doc]["commonnoun_cluster_count"])
-    #     clus_list.append(stats_dict[each_doc]["cluster_count"])
-
-    #     if(stats_dict[each_doc]["commonnoun_cluster_count"]>20):
-    #         import ipdb; ipdb.set_trace()
+        # print(doc_percent_list)
+        mean_matching.append(np.mean(doc_percent_list))
+        mean_matching_micro.append(np.sum(doc_matching_list)/np.sum(doc_clusters_list))
+    print(mean_matching)
+    print(mean_matching_micro)
 
 
-    # print(mean_matching)
 
-    # print("done finding files", mean_matching)
+
+
+
+
+    mean_matching = []
+    propnoun_list = []
+    commonnou_list = []
+    clus_list = []
+    zero_count = 0
+    with open("./Analysis_FT_Ontonotes_{}.json".format(0.7), "r") as f:
+        stats_dict = json.load(f)
+
+    for each_doc in stats_dict:
+        propnoun_list.append(stats_dict[each_doc]["propernoun_cluster_count"])
+        commonnou_list.append(stats_dict[each_doc]["commonnoun_cluster_count"])
+        clus_list.append(stats_dict[each_doc]["cluster_count"])
+
+        # if(stats_dict[each_doc]["commonnoun_cluster_count"]>20):
+        #     import ipdb; ipdb.set_trace()
+
+    hist = np.histogram(propnoun_list, bins=np.arange(25)*20)
+    print(hist)
+
+    hist = np.histogram(commonnou_list, bins=np.arange(25)*20)
+    print(hist)
+
+    hist = np.histogram(clus_list, bins=np.arange(25)*20)
+    print(hist)
 
 
 
@@ -298,5 +349,7 @@ def cluster_matching_analysis():
 
 
 if __name__ == "__main__":
-    cluster_matching_analysis()
-    # doc_size_analysis()
+    cluster_matching()
+    # cluster_matching_analysis()
+    # doc_parts_analysis()
+    # doc_len_analysis()
